@@ -11,6 +11,8 @@ WHITE = pygame.Color(255, 255, 255)
 BROWN = pygame.Color(165, 42, 42)
 
 FPS_CONTROL = pygame.time.Clock()
+TICK = 20
+
 
 
 def load_image(name, colorkey=None):
@@ -70,9 +72,9 @@ class Game:
                     sys.exit()
         return change
 
-    def refresh(self):
+    def refresh(self, tick=20):
         pygame.display.flip()
-        FPS_CONTROL.tick(20)
+        FPS_CONTROL.tick(tick)
 
     def show_score(self, choice=1):
         s_font = pygame.font.SysFont('comicsansms', 24)
@@ -85,7 +87,8 @@ class Game:
             s_rect.midtop = (360, 120)
         self.surface.blit(s_surf, s_rect)
 
-    def game_over(self):
+    def game_over(self, music):
+        music.play()
         go_font = pygame.font.SysFont('comicsansms', 72)
         go_surf = go_font.render('Game over', True, RED)
         go_rect = go_surf.get_rect()
@@ -103,6 +106,7 @@ class Game:
         self.show_score(0)
         pygame.display.flip()
         time.sleep(1)
+        pygame.mixer.stop()
 
 
 class Snake:
@@ -110,6 +114,7 @@ class Snake:
         self.head = [100, 100]
         self.body = [[100, 100], [90, 100], [80, 100]]
         self.snake_color = snake_color
+        self.speed = 10
 
         self.direction = "RIGHT"
 
@@ -124,13 +129,13 @@ class Snake:
 
     def change_head(self):
         if self.direction == "RIGHT":
-            self.head[0] += 10
+            self.head[0] += self.speed
         elif self.direction == "LEFT":
-            self.head[0] -= 10
+            self.head[0] -= self.speed
         elif self.direction == "UP":
-            self.head[1] -= 10
+            self.head[1] -= self.speed
         elif self.direction == "DOWN":
-            self.head[1] += 10
+            self.head[1] += self.speed
 
     def snake_body(self, score, food_pos, width, height):
         self.body.insert(0, list(self.head))
@@ -148,7 +153,7 @@ class Snake:
         for pos in self.body:
             pygame.draw.rect(surface, self.snake_color, pygame.Rect(pos[0], pos[1], 10, 10))
 
-    def check_collisions(self, game_over, width, height):
+    def check_collisions(self, game_over, width, height, over):
         if any((
                 self.head[0] > width - 10
                 or self.head[0] < 0,
@@ -156,7 +161,7 @@ class Snake:
                 or self.head[1] < 0
         )):
             while True:
-                game_over()
+                game_over(over)
                 for event in pygame.event.get():
                     if event.type == pygame.KEYDOWN:
                         if event.key == ord("r"):
@@ -167,7 +172,7 @@ class Snake:
         for block in self.body[1:]:
             if block[0] == self.head[0] and block[1] == self.head[1]:
                 while True:
-                    game_over()
+                    game_over(over)
                     for event in pygame.event.get():
                         if event.type == pygame.KEYDOWN:
                             if event.key == ord("r"):
@@ -204,6 +209,12 @@ def play():
 
     game.init()
 
+    pygame.mixer.music.load("music/megalovania.mp3")
+    pygame.mixer.music.play()
+
+    over = pygame.mixer.Sound("music/over.wav")
+    mega = pygame.mixer.Sound("music/megalovania.mp3")
+
     while True:
         snake.change = game.event_loop(snake.change)
 
@@ -216,7 +227,7 @@ def play():
         food.draw_food(game.surface)
 
         snake.check_collisions(
-            game.game_over, game.width, game.height)
+            game.game_over, game.width, game.height, over)
 
         game.show_score()
         game.refresh()
