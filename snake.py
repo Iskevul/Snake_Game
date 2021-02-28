@@ -13,6 +13,8 @@ BROWN = pygame.Color(165, 42, 42)
 FPS_CONTROL = pygame.time.Clock()
 TICK = 20
 
+count = 0
+
 
 
 def load_image(name, colorkey=None):
@@ -88,25 +90,28 @@ class Game:
         self.surface.blit(s_surf, s_rect)
 
     def game_over(self, music):
-        music.play()
-        go_font = pygame.font.SysFont('comicsansms', 72)
-        go_surf = go_font.render('Game over', True, RED)
-        go_rect = go_surf.get_rect()
-        go_rect.midtop = (360, 15)
-        back_font = pygame.font.SysFont('comicsansms', 40)
-        restart = back_font.render("Press R to Restart", True, GREEN)
-        restart_rect = restart.get_rect()
-        restart_rect.midtop = (360, 165)
-        escape = back_font.render("Press E to Escape", True, GREEN)
-        escape_rect = escape.get_rect()
-        escape_rect.midtop = (360, 225)
-        self.surface.blit(go_surf, go_rect)
-        self.surface.blit(restart, restart_rect)
-        self.surface.blit(escape, escape_rect)
-        self.show_score(0)
-        pygame.display.flip()
-        time.sleep(1)
-        pygame.mixer.stop()
+        global count
+        if count == 0:
+            music.play()
+            go_font = pygame.font.SysFont('comicsansms', 72)
+            go_surf = go_font.render('Game over', True, RED)
+            go_rect = go_surf.get_rect()
+            go_rect.midtop = (360, 15)
+            back_font = pygame.font.SysFont('comicsansms', 40)
+            restart = back_font.render("Press R to Restart", True, GREEN)
+            restart_rect = restart.get_rect()
+            restart_rect.midtop = (360, 165)
+            escape = back_font.render("Press E to Escape", True, GREEN)
+            escape_rect = escape.get_rect()
+            escape_rect.midtop = (360, 225)
+            self.surface.blit(go_surf, go_rect)
+            self.surface.blit(restart, restart_rect)
+            self.surface.blit(escape, escape_rect)
+            self.show_score(0)
+            pygame.display.flip()
+            time.sleep(1)
+            music.stop()
+            count += 1
 
 
 class Snake:
@@ -154,6 +159,7 @@ class Snake:
             pygame.draw.rect(surface, self.snake_color, pygame.Rect(pos[0], pos[1], 10, 10))
 
     def check_collisions(self, game_over, width, height, over):
+        global count
         if any((
                 self.head[0] > width - 10
                 or self.head[0] < 0,
@@ -165,6 +171,7 @@ class Snake:
                 for event in pygame.event.get():
                     if event.type == pygame.KEYDOWN:
                         if event.key == ord("r"):
+                            count = 0
                             play()
                         elif event.key == ord("e"):
                             pygame.quit()
@@ -176,6 +183,7 @@ class Snake:
                     for event in pygame.event.get():
                         if event.type == pygame.KEYDOWN:
                             if event.key == ord("r"):
+                                count = 0
                                 play()
                             elif event.key == ord("e"):
                                 pygame.quit()
